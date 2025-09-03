@@ -55,6 +55,7 @@
 	</dependencies>
 
 	<build>
+		<finalName>api-rest-stub</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
@@ -62,5 +63,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
 </project>
