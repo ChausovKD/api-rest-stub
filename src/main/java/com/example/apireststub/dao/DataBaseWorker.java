@@ -88,17 +88,25 @@ public final class DataBaseWorker {
     }
 
     private static void loadProperties() {
-        Properties props = new Properties();
-        try (InputStream input = DataBaseWorker.class.getClassLoader().getResourceAsStream("db.properties")) {
-            if (input == null) {
-                throw new RuntimeException("Not found file db.properties");
+        DB_URL = System.getenv("DB_URL");
+        DB_USERNAME = System.getenv("DB_USERNAME");
+        DB_PASSWORD = System.getenv("DB_PASSWORD");
+        if (DB_URL == null || DB_USERNAME == null || DB_PASSWORD == null) {
+            Properties props = new Properties();
+            try (InputStream input = DataBaseWorker.class.getClassLoader().getResourceAsStream("db.properties")) {
+                if (input != null) {
+                    props.load(input);
+                    DB_URL = props.getProperty("db.url");
+                    DB_USERNAME = props.getProperty("db.username");
+                    DB_PASSWORD = props.getProperty("db.password");
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Cannot load db.properties", e);
             }
-            props.load(input);
-            DB_URL = props.getProperty("db.url");
-            DB_USERNAME = props.getProperty("db.username");
-            DB_PASSWORD = props.getProperty("db.password");
-        } catch (IOException e) {
-            throw new RuntimeException("Error loading db.properties: " + e.getMessage(), e);
+        }
+
+        if (DB_URL == null || DB_USERNAME == null || DB_PASSWORD == null) {
+            throw new RuntimeException("Database configuration is missing (check DB_URL, DB_USERNAME, DB_PASSWORD or db.properties)");
         }
     }
 
