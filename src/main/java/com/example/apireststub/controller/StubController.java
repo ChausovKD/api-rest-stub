@@ -9,33 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 @RestController
 @RequestMapping("/api")
 public class StubController {
-
-    private static final List<byte[]> memoryLeak = new ArrayList<>();
-
     @Autowired
     private DataBaseWorker dataBaseWorker;
-
-    @GetMapping("/status")
-    public ResponseEntity<String> getSuccessStatus() {
-        simulateLittleDelay();
-        return ResponseEntity.ok("{\"login\":\"Login1\",\"status\":\"ok\"}");
-    }
-
-    @GetMapping("/leak")
-    public ResponseEntity<String> createMemoryLeak() {
-        simulateLittleDelay();
-        int bytesToLeak = Integer.parseInt(System.getProperty("leak.size.bytes", "0"));
-        memoryLeak.add(new byte[bytesToLeak]);
-        int totalLeakedKB = (int) Math.ceil(memoryLeak.size() * bytesToLeak / 1024.0);
-        return ResponseEntity.ok("{\"totalLeakedKB\":" + totalLeakedKB + "}");
-    }
 
     @PostMapping("/register")
     public ResponseEntity<User> register(@Valid @RequestBody AuthResponse request) {
