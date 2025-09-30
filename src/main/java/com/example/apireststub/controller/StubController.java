@@ -4,11 +4,13 @@ import com.example.apireststub.dao.DataBaseWorker;
 import com.example.apireststub.dto.AuthResponse;
 import com.example.apireststub.entity.User;
 import com.example.apireststub.exception.UserNotFoundException;
+import com.example.apireststub.util.FileWorker;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Random;
 
 @RestController
@@ -17,24 +19,35 @@ public class StubController {
     @Autowired
     private DataBaseWorker dataBaseWorker;
 
-    @PostMapping("/register")
-    public ResponseEntity<User> register(@Valid @RequestBody AuthResponse request) {
-        simulateLittleDelay();
-        User newUser = new User(request.getLogin(), request.getPassword(),
-                request.getDate(), request.getEmail());
-        dataBaseWorker.createUser(newUser);
-        return ResponseEntity.ok(newUser);
-    }
+    @Autowired
+    private FileWorker fileWorker;
 
     @GetMapping("/users/{login}")
     public ResponseEntity<User> getUserByLogin(@PathVariable String login) {
         simulateLittleDelay();
         User foundUser = dataBaseWorker.selectUserByLogin(login);
         if (foundUser != null) {
+            fileWorker.writeEntityToFile(foundUser);
             return ResponseEntity.ok(foundUser);
         } else {
             throw new UserNotFoundException("User with login '" + login + "' not found in database");
         }
+    }
+
+    @GetMapping("randomUser")
+    public ResponseEntity<String> getRandomUser() {
+        simulateLittleDelay();
+        String randomUserJson = fileWorker.readRandomLineFromFile();
+        return ResponseEntity.ok(randomUserJson);
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<User> register(@Valid @RequestBody AuthResponse request) {
+        simulateLittleDelay();
+        User newUser = new User(request.getLogin(), request.getPassword(),
+                LocalDateTime.now(), request.getEmail());
+        dataBaseWorker.createUser(newUser);
+        return ResponseEntity.ok(newUser);
     }
 
     private void simulateLittleDelay() {

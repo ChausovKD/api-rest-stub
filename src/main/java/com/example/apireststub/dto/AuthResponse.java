@@ -28,9 +28,6 @@ public class AuthResponse {
             message = "Password must be 6-30 characters without spaces and contain at least one letter and one digit")
     private String password;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime date = LocalDateTime.now();
-
     @NotBlank(message = "Email is required")
     @Email(message = "Email should be valid")
     private String email;
