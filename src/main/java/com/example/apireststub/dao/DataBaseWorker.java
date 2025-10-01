@@ -3,8 +3,10 @@ package com.example.apireststub.dao;
 import com.example.apireststub.entity.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.*;
@@ -15,15 +17,11 @@ import java.util.Properties;
 public final class DataBaseWorker {
     private static final Logger logger = LoggerFactory.getLogger(DataBaseWorker.class);
 
-    private static String DB_URL;
-    private static String DB_USERNAME;
-    private static String DB_PASSWORD;
+    private final DataSource dataSource;
 
-    static {
-        loadProperties();
-    }
-
-    private DataBaseWorker() {
+    @Autowired
+    public DataBaseWorker(DataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     public User selectUserByLogin(String login) {
@@ -36,7 +34,7 @@ public final class DataBaseWorker {
                     WHERE ua.login = '%s'
                     """.formatted(login);
         try {
-            connection = open();
+            connection = dataSource.getConnection();
             statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(sql);
             if (resultSet.next()) {
@@ -70,7 +68,7 @@ public final class DataBaseWorker {
                 INSERT INTO users_contacts (login, email)
                 VALUES (?, ?)
                 """;
-        try (Connection connection = open();
+        try (Connection connection = dataSource.getConnection();
              PreparedStatement psAuth = connection.prepareStatement(sqlAuth);
              PreparedStatement psContacts = connection.prepareStatement(sqlContacts)) {
             int totalAffectedRows = 0;
@@ -85,32 +83,5 @@ public final class DataBaseWorker {
         } catch (SQLException e) {
             throw new RuntimeException("Error creating user: " + e.getMessage(), e);
         }
-    }
-
-    private static void loadProperties() {
-        DB_URL = System.getenv("DB_URL");
-        DB_USERNAME = System.getenv("DB_USERNAME");
-        DB_PASSWORD = System.getenv("DB_PASSWORD");
-        if (DB_URL == null || DB_USERNAME == null || DB_PASSWORD == null) {
-            Properties props = new Properties();
-            try (InputStream input = DataBaseWorker.class.getClassLoader().getResourceAsStream("db.properties")) {
-                if (input != null) {
-                    props.load(input);
-                    DB_URL = props.getProperty("db.url");
-                    DB_USERNAME = props.getProperty("db.username");
-                    DB_PASSWORD = props.getProperty("db.password");
-                }
-            } catch (IOException e) {
-                throw new RuntimeException("Cannot load db.properties", e);
-            }
-        }
-
-        if (DB_URL == null || DB_USERNAME == null || DB_PASSWORD == null) {
-            throw new RuntimeException("Database configuration is missing (check DB_URL, DB_USERNAME, DB_PASSWORD or db.properties)");
-        }
-    }
-
-    public static Connection open() throws SQLException {
-        return DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
     }
 }

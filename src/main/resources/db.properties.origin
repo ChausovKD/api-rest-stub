@@ -1,3 +1,4 @@
-db.url=
-db.username=
-db.password=
+spring.datasource.url=
+spring.datasource.username=
+spring.datasource.password=
+spring.datasource.driver-class-name=
